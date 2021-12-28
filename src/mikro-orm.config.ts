@@ -1,5 +1,5 @@
 import { __prod__ } from "./constants";
-import { Post } from "./entities/Post";
+import { Post } from "./entities/PostEntity";
 import { MikroORM } from "@mikro-orm/core";
 import path from 'path';
 
@@ -9,8 +9,8 @@ export default {
         pattern: /^[\w-]+\d+\.[jt]s$/, // regex pattern for the migration files
     },
     entities: [Post],
-    dbName: 'rebbit',
-    user: 'admin',
+    dbName: 'socialchatter',
+    user: 'socialchatteradmin',
     password: 'amchourasia',
     type: 'postgresql',
     debug: !__prod__ , // logs the sql when not in production
