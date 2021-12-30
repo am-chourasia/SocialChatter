@@ -8,6 +8,7 @@ import {
 	InputType,
 	Field,
 	ObjectType,
+	Query,
 } from "type-graphql";
 import argon2 from "argon2";
 
@@ -41,10 +42,18 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+	@Query(() => User, { nullable: true })
+	async me(@Ctx() { req, em }: MyContext) {
+		// not loged in
+		if (!req.session.userId) return null;
+		const user = await em.findOne(User, { id: req.session.userId });
+		return user;
+	}
+
 	@Mutation(() => UserResponse)
 	async register(
 		@Arg("credentials") credentials: inputCredentials,
-		@Ctx() { em }: MyContext
+		@Ctx() { em, req }: MyContext
 	) {
 		if (credentials.username.length < 2)
 			return {
@@ -78,6 +87,9 @@ export class UserResolver {
 				};
 			}
 		}
+		// will store the cookie of the registered user
+		// which will keep them loged in
+		req.session.userId = user.id;
 		return {
 			user: user,
 		};
@@ -86,7 +98,7 @@ export class UserResolver {
 	@Mutation(() => UserResponse)
 	async login(
 		@Arg("credentials") credentials: inputCredentials,
-		@Ctx() { em }: MyContext
+		@Ctx() { em, req }: MyContext
 	) {
 		const user = await em.findOne(User, { username: credentials.username });
 		if (!user) {
@@ -102,6 +114,8 @@ export class UserResolver {
 				error: [new FieldError("passsword", "Incorrect Password!")],
 			};
 		}
+		// adding userId to the session once loged in successfully.
+		req.session.userId = user.id;
 		return {
 			user: user,
 		};
